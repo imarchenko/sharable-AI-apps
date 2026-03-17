@@ -1,0 +1,488 @@
+# ============================================================
+# .app Schema Specification — v2.0
+# Reproducible AI Application Manifest
+# ============================================================
+#
+# WHAT CHANGED FROM v1.0
+# ----------------------
+# v1.0 described apps in natural language. It achieved ~85-90%
+# visual and structural fidelity across rebuilds, but left the
+# remaining 10-15% to AI interpretation — icons, spacing micro-
+# decisions, component variants, and interaction details.
+#
+# v2.0 closes that gap by introducing two new layers:
+#
+#   LAYER 1 — Intent (inherited from v1.0)
+#     Human-readable description of what the app does.
+#     Still required. Still the primary input for AI builders.
+#
+#   LAYER 2 — Assets (new in v2.0)
+#     Canonical, embedded, machine-readable assets that the AI
+#     MUST use verbatim. Icons as SVG paths. Tokens as exact
+#     values. Component markup as literal HTML/CSS snippets.
+#     These are the "locks" — they remove ambiguity entirely.
+#
+#   LAYER 3 — Snapshot (new in v2.0)
+#     An optional but recommended canonical output snapshot:
+#     a compressed, base64-encoded reference build that any
+#     AI or tool can diff against to measure fidelity.
+#     Think: the golden master.
+#
+# REPRODUCIBILITY MODEL
+# ---------------------
+# v1.0: AI reads intent → interprets → builds → ~90% match
+# v2.0: AI reads intent → applies locked assets → builds
+#       → diffs against snapshot → reports fidelity score
+#
+# FIDELITY SCORING (new in v2.0)
+# -------------------------------
+# After a build, an AI should self-score across 4 dimensions:
+#   Structure  — does the DOM/component tree match the spec?
+#   Visual     — do tokens, assets, and layout match exactly?
+#   Behaviour  — do all interactions match the verify block?
+#   Output     — does the build pass all success criteria?
+# Score: 0-100 per dimension. Target: 95+ on all four.
+#
+# BREAKING CHANGES FROM v1.0
+# --------------------------
+# - meta.schema_version is now REQUIRED (was absent in v1.0)
+# - build.ai_prompt is now RECOMMENDED not REQUIRED
+#   (assets + snapshot can replace it for locked rebuilds)
+# - New required top-level block: assets
+# - New optional top-level block: snapshot
+# - verify block now includes fidelity_target field
+# - changelog entries now include fidelity_score field
+#
+# USAGE
+# -----
+# Pass to any AI with the instruction:
+# "Build the application described in this .app file.
+#  Use all assets verbatim. Diff against the snapshot
+#  if present and report your fidelity score."
+#
+# Required fields: [REQUIRED]
+# Optional fields: [OPTIONAL]
+# Locked fields (must be used verbatim): [LOCKED]
+# ============================================================
+
+
+# ------------------------------------------------------------
+# BLOCK 1: meta
+# Identity, versioning, and schema version declaration.
+# ------------------------------------------------------------
+meta:
+
+  schema_version: string          # [REQUIRED] Version of THIS schema spec
+                                  # e.g. "2.0.0"
+                                  # Breaking changes increment MAJOR
+                                  # New blocks/fields increment MINOR
+                                  # Fixes increment PATCH
+
+  name: string                    # [REQUIRED] Human-readable app name
+  id: string                      # [REQUIRED] Unique slug, lowercase, hyphens
+  version: string                 # [REQUIRED] App semantic version: MAJOR.MINOR.PATCH
+
+  description: string             # [REQUIRED] One sentence describing the app
+
+  author: string                  # [OPTIONAL]
+  team: string                    # [OPTIONAL]
+  contact: string                 # [OPTIONAL]
+
+  created: date                   # [REQUIRED] ISO 8601: YYYY-MM-DD
+  updated: date                   # [REQUIRED] ISO 8601: YYYY-MM-DD
+
+  license: string                 # [OPTIONAL] e.g. "MIT", "Apache-2.0"
+
+  tags:                           # [OPTIONAL]
+    - string
+
+
+# ------------------------------------------------------------
+# BLOCK 2: intent
+# What the app does, for whom, and under what constraints.
+# Unchanged from v1.0 — pure human-readable intent.
+# ------------------------------------------------------------
+intent:
+
+  goal: string                    # [REQUIRED]
+  audience: string                # [REQUIRED]
+
+  context: |                      # [OPTIONAL]
+    Multiline Markdown.
+
+  use_cases:                      # [OPTIONAL]
+    - string
+
+  constraints:
+    must: |                       # [OPTIONAL]
+    must_not: |                   # [OPTIONAL]
+
+  out_of_scope:                   # [OPTIONAL]
+    - string
+
+
+# ------------------------------------------------------------
+# BLOCK 3: build
+# Technical specification. Now separated into:
+#   build.spec   — what to build (intent-layer)
+#   build.source — how it was built (lock-layer)
+# ------------------------------------------------------------
+build:
+
+  platform: string                # [REQUIRED]
+  output_format: string           # [REQUIRED]
+
+  framework:
+    name: string                  # [OPTIONAL]
+    version: string               # [OPTIONAL]
+
+  dependencies:                   # [OPTIONAL]
+    - name: string
+      version: string
+      source: string
+      purpose: string
+
+  storage: string                 # [OPTIONAL]
+
+  data_model:                     # [OPTIONAL]
+    - name: string
+      fields:
+        field_name: type
+      notes: string
+
+  ai_platform: string             # [OPTIONAL] AI used to produce this version
+
+  ai_prompt: |                    # [RECOMMENDED] Full build prompt
+                                  # In v2.0, if assets.components contains
+                                  # source snippets, this can be shorter —
+                                  # the AI should compose from locked assets
+                                  # rather than interpret prose for visuals.
+
+  environment_notes: |            # [OPTIONAL]
+
+
+# ------------------------------------------------------------
+# BLOCK 4: assets  ← NEW IN v2.0
+#
+# The reproducibility engine. Canonical, locked assets that
+# the AI MUST use verbatim in every rebuild.
+#
+# Philosophy:
+#   Anything that caused fidelity loss in v1.0 belongs here.
+#   If two AI builds produced different icons, the icon SVG
+#   goes in assets.icons. If spacing varied, the exact values
+#   go in assets.tokens. If a component rendered differently,
+#   its markup goes in assets.components.
+#
+# The AI instruction for this block is:
+#   "Every field marked [LOCKED] must be copied exactly into
+#    your output. Do not reinterpret, redesign, or approximate.
+#    These are the canonical values — use them as-is."
+# ------------------------------------------------------------
+assets:
+
+  tokens:                         # [LOCKED] Exact design token values
+                                  # These override anything in the design block.
+                                  # Every value here is authoritative.
+    colors:
+      # Format: token_name: "exact CSS value"
+      # e.g.:
+      # primary: "#1A3C5E"
+      # surface: "rgba(255,255,255,0.92)"
+      token_name: string
+
+    typography:
+      # e.g.:
+      # font_family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      # font_size_base: "13px"
+      # font_weight_normal: 400
+      token_name: string
+
+    spacing:
+      # e.g.:
+      # menubar_height: "28px"
+      # window_titlebar_height: "32px"
+      token_name: string
+
+    borders:
+      # e.g.:
+      # radius_window: "12px"
+      # width_default: "0.5px"
+      token_name: string
+
+    shadows:
+      # e.g.:
+      # window: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)"
+      token_name: string
+
+    animations:
+      # e.g.:
+      # transition_default: "150ms ease"
+      # toast_enter: "slide-in 300ms ease forwards"
+      token_name: string
+
+  icons:                          # [LOCKED] Canonical SVG for every icon
+                                  # AI must embed these paths verbatim.
+                                  # No substitutions, no redraws.
+    - id: string                  # e.g. "files", "notes", "trash"
+      name: string                # Human label
+      viewBox: string             # e.g. "0 0 28 28"
+      svg_body: |                 # Everything inside <svg>...</svg>
+                                  # Do NOT include the outer <svg> tag —
+                                  # just the inner paths, rects, circles, etc.
+        string
+
+  components:                     # [LOCKED] Canonical markup for UI components
+                                  # AI must use these as the exact implementation.
+                                  # Parameterise with {{variable}} placeholders.
+    - id: string                  # e.g. "window", "toast", "chip", "dock-icon"
+      name: string
+      description: string         # What it is and where it's used
+      html: |                     # Canonical HTML markup
+                                  # Use {{param}} for dynamic values
+                                  # e.g. {{title}}, {{app_id}}, {{color}}
+        string
+      css: |                      # Scoped CSS for this component
+                                  # Use CSS variables for all color values
+        string
+      js: |                       # [OPTIONAL] Component behaviour
+                                  # Self-contained JS snippet
+        string
+      params:                     # [OPTIONAL] Parameter definitions
+        - name: string            # e.g. "title"
+          type: string            # e.g. "string"
+          default: string         # [OPTIONAL]
+          description: string
+
+  css_variables: |                # [LOCKED] Complete :root CSS block
+                                  # Paste the exact :root{} declaration here.
+                                  # AI must use this verbatim — no additions,
+                                  # no removals, no value changes.
+    :root {
+      --token-name: value;
+    }
+
+  global_css: |                   # [LOCKED] Full global stylesheet
+                                  # The complete <style> block content.
+                                  # AI embeds this verbatim in every rebuild.
+                                  # Eliminates all CSS interpretation variance.
+    string
+
+
+# ------------------------------------------------------------
+# BLOCK 5: design
+# Visual and interaction intent. In v2.0 this block is
+# DESCRIPTIVE only — it documents design decisions for humans.
+# The authoritative values live in assets.tokens.
+# If a value appears in both design and assets, assets wins.
+# ------------------------------------------------------------
+design:
+
+  aesthetic: string               # [REQUIRED] One-line design direction
+  theme: string                   # [OPTIONAL] "light", "dark", "system", "both"
+
+  tokens:                         # [OPTIONAL] Human-readable token descriptions
+                                  # For documentation only — not used by AI builder
+                                  # Canonical values are in assets.tokens
+    colors:
+      note: string
+    typography:
+      note: string
+
+  components:                     # [OPTIONAL] Component design intent
+    - name: string
+      description: string
+      states:
+        - state_name: string
+      behavior: string
+
+  interactions:                   # [OPTIONAL] Interaction intent descriptions
+    - trigger: string
+      action: string
+      feedback: string
+
+  responsive: boolean
+  accessibility: string
+
+
+# ------------------------------------------------------------
+# BLOCK 6: verify
+# Acceptance criteria + fidelity targets. Expanded in v2.0
+# to include quantitative fidelity scoring.
+# ------------------------------------------------------------
+verify:
+
+  success_criteria: |             # [REQUIRED] Plain language pass conditions
+
+  must_include:                   # [REQUIRED]
+    - string
+
+  must_not_include:               # [REQUIRED]
+    - string
+
+  edge_cases:                     # [OPTIONAL]
+    - situation: string
+      handling: string
+
+  kpis:                           # [OPTIONAL]
+    - metric: string
+      target: string
+
+  fidelity_target:                # [NEW IN v2.0] Minimum acceptable fidelity
+    structure: number             # 0-100. e.g. 98
+    visual: number                # 0-100. e.g. 95
+    behaviour: number             # 0-100. e.g. 97
+    output: number                # 0-100. e.g. 95
+    note: |
+      After each build, the AI must self-score against these
+      dimensions and report the scores. If any dimension falls
+      below its target, the AI must identify the gaps and either
+      fix them or flag them for human review.
+
+  review:
+    human_required: boolean       # [REQUIRED]
+    method: string                # [OPTIONAL]
+    reviewer: string              # [OPTIONAL]
+
+
+# ------------------------------------------------------------
+# BLOCK 7: snapshot  ← NEW IN v2.0
+#
+# The golden master. An encoded reference build that defines
+# "correct" for this version of the app.
+#
+# Philosophy:
+#   The snapshot is what makes .app files truly version-
+#   controlled. It's the diff target. A new build either
+#   matches the snapshot (reproducible) or it doesn't
+#   (and the delta is documented in the changelog).
+#
+#   Snapshots are optional but strongly recommended for
+#   any app version that is considered "released".
+#
+# How to generate a snapshot:
+#   1. Build the app from this .app file
+#   2. Human-review the build against all verify criteria
+#   3. If accepted: encode the output file as base64
+#   4. Paste into snapshot.data below
+#   5. Record the hash in snapshot.hash
+#
+# How an AI uses the snapshot:
+#   1. After building, encode its own output as base64
+#   2. Diff against snapshot.data
+#   3. Report structural and visual delta
+#   4. Self-score fidelity (see verify.fidelity_target)
+# ------------------------------------------------------------
+snapshot:
+
+  format: string                  # [REQUIRED if snapshot present]
+                                  # e.g. "html", "react", "json"
+
+  encoding: string                # [REQUIRED if snapshot present]
+                                  # "base64" (standard) or "gzip+base64"
+
+  hash:
+    algorithm: string             # e.g. "sha256"
+    value: string                 # Hex digest of the decoded output file
+
+  size_bytes: number              # Uncompressed size of the output file
+
+  generated:
+    date: date                    # ISO 8601
+    ai_platform: string           # AI that produced the canonical build
+    build_time_ms: number         # How long the build took
+
+  data: |                         # [LOCKED] Base64-encoded canonical output
+                                  # This IS the app. Verbatim.
+                                  # To extract: base64 --decode snapshot.data > app.html
+    string
+
+
+# ------------------------------------------------------------
+# BLOCK 8: changelog
+# Version history. Expanded in v2.0 to track fidelity scores.
+# ------------------------------------------------------------
+changelog:
+
+  - version: string               # [REQUIRED]
+    date: date                    # [REQUIRED]
+    author: string                # [OPTIONAL]
+    ai_platform: string           # [OPTIONAL]
+    summary: string               # [REQUIRED]
+
+    fidelity_scores:              # [NEW IN v2.0] Actual scores from this build
+      structure: number           # 0-100
+      visual: number              # 0-100
+      behaviour: number           # 0-100
+      output: number              # 0-100
+      method: string              # e.g. "AI self-score", "human review", "automated diff"
+
+    delta_from_previous: |        # [OPTIONAL] What changed vs prior snapshot
+      Describe structural, visual, or behaviour changes.
+      Reference specific assets.components or assets.tokens
+      that were added, changed, or removed.
+
+    snapshot_hash: string         # [OPTIONAL] Hash of the snapshot for this version
+
+    notes: |                      # [OPTIONAL]
+      Multiline Markdown.
+
+
+# ============================================================
+# MIGRATION GUIDE: v1.0 → v2.0
+# ============================================================
+#
+# Step 1 — Add meta.schema_version: "2.0.0"
+#
+# Step 2 — Add assets block
+#   Start with assets.tokens — copy all values from design.tokens
+#   but replace descriptions with exact CSS values.
+#   Then add assets.icons — run your current build, extract
+#   the SVG inner bodies, paste them in.
+#   Then add assets.global_css — copy the full <style> block
+#   from your canonical build.
+#
+# Step 3 — Add snapshot block (recommended)
+#   Take your best accepted build. Base64-encode it.
+#   Paste into snapshot.data. Generate a sha256 hash.
+#
+# Step 4 — Update verify block
+#   Add fidelity_target scores based on what you consider
+#   acceptable for your app.
+#
+# Step 5 — Update changelog
+#   Add fidelity_scores to your existing v1.0.0 entry
+#   based on the builds you've already tested.
+#
+# ============================================================
+# OPEN FORMAT NOTES
+# ============================================================
+#
+# This schema is designed to be:
+#   - AI-platform agnostic (works with any LLM)
+#   - Tool agnostic (plain YAML, no proprietary syntax)
+#   - Human-readable (comments explain every field)
+#   - Version-controllable (git-diffable YAML + changelog)
+#   - Extensible (add custom blocks under a vendor: namespace)
+#
+# Vendor extensions:
+#   To add platform-specific fields without breaking the spec,
+#   namespace them under x-{vendor}:
+#   e.g.
+#     x-claude:
+#       artifact_type: "react"
+#       sendprompt_enabled: true
+#     x-figma:
+#       file_key: "abc123"
+#
+# Schema registry (proposed):
+#   https://appschema.dev/spec/v2.0  (placeholder)
+#
+# Validator (proposed):
+#   Pass any .app file to: validate.appschema.dev
+#   Returns: schema compliance report + fidelity estimate
+#
+# ============================================================
+# END OF SCHEMA SPEC v2.0
+# Schema maintained by: Maker Bot AI / Open Format Initiative
+# ============================================================

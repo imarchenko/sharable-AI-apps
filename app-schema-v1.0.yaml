@@ -1,0 +1,269 @@
+# ============================================================
+# .app Schema Specification — v1.0
+# Reproducible AI Application Manifest
+# ============================================================
+# Purpose:
+#   A .app file is a machine-readable + human-readable YAML
+#   manifest that fully describes an AI-built application so
+#   it can be reproduced, versioned, and handed off across
+#   AI platforms, teams, and time.
+#
+# Usage:
+#   Save as <your-app-name>.app
+#   Pass to any AI with the instruction:
+#   "Build the application described in this .app file."
+#
+# Required fields are marked: [REQUIRED]
+# Optional fields are marked: [OPTIONAL]
+# ============================================================
+
+# ------------------------------------------------------------
+# BLOCK 1: meta
+# Identity and versioning. Purely administrative.
+# ------------------------------------------------------------
+meta:
+
+  name: string                    # [REQUIRED] Human-readable app name
+                                  # e.g. "Maker Bot Unified Request Forms"
+
+  id: string                      # [REQUIRED] Unique slug, lowercase, hyphens
+                                  # e.g. "maker-bot-forms"
+
+  version: string                 # [REQUIRED] Semantic version: MAJOR.MINOR.PATCH
+                                  # e.g. "1.0.0"
+                                  # Increment MAJOR for breaking changes to spec
+                                  # Increment MINOR for new features
+                                  # Increment PATCH for fixes / refinements
+
+  description: string             # [REQUIRED] One sentence describing the app
+                                  # e.g. "Three-tier tabbed request form for AI briefs"
+
+  author: string                  # [OPTIONAL] Name or handle of creator
+  team: string                    # [OPTIONAL] Team or org name
+  contact: string                 # [OPTIONAL] Email or URL
+
+  created: date                   # [REQUIRED] ISO 8601: YYYY-MM-DD
+  updated: date                   # [REQUIRED] ISO 8601: YYYY-MM-DD — update on every change
+
+  license: string                 # [OPTIONAL] e.g. "MIT", "Proprietary", "CC BY 4.0"
+
+  tags:                           # [OPTIONAL] List of searchable keywords
+    - string
+
+# ------------------------------------------------------------
+# BLOCK 2: intent
+# What the app does, for whom, and under what constraints.
+# This block is AI-platform agnostic — pure intent, no tech.
+# ------------------------------------------------------------
+intent:
+
+  goal: string                    # [REQUIRED] What outcome does this app deliver?
+                                  # Be specific. Bad: "a form". Good: "allow users to
+                                  # structure AI project briefs across three complexity
+                                  # tiers and submit them directly to an AI assistant"
+
+  audience: string                # [REQUIRED] Who uses this app?
+                                  # e.g. "designers and developers making AI requests"
+
+  context: |                      # [OPTIONAL] Background, prior work, references
+    Multiline Markdown string.
+    Include links, prior version notes, competitor references.
+
+  use_cases:                      # [OPTIONAL] List of specific scenarios
+    - string                      # e.g. "User submits a quick one-line request"
+    - string                      # e.g. "Team lead files a formal technical brief"
+
+  constraints:                    # [OPTIONAL] Non-negotiable limitations
+    must: |                       # Things the app MUST always do/have
+      Multiline. One constraint per line preferred.
+    must_not: |                   # Things the app MUST NEVER do/have
+      Multiline. One constraint per line preferred.
+
+  out_of_scope:                   # [OPTIONAL] Explicitly excluded features
+    - string
+
+# ------------------------------------------------------------
+# BLOCK 3: build
+# Technical specification. Platform, stack, dependencies,
+# and the AI build prompt — the reproducibility engine.
+# ------------------------------------------------------------
+build:
+
+  platform: string                # [REQUIRED] Target runtime environment
+                                  # Options: "web", "mobile", "desktop",
+                                  #          "cli", "api", "claude-artifact",
+                                  #          "claude-widget", "cross-platform"
+
+  output_format: string           # [REQUIRED] Primary deliverable type
+                                  # Options: "html", "react", "vue", "svelte",
+                                  #          "python", "node", "yaml", "json",
+                                  #          "markdown", "pdf", "other"
+
+  framework:                      # [OPTIONAL]
+    name: string                  # e.g. "React", "vanilla JS", "FastAPI"
+    version: string               # e.g. "18.x", "latest"
+
+  dependencies:                   # [OPTIONAL] External libraries required
+    - name: string                # e.g. "recharts"
+      version: string             # e.g. "^2.0"
+      source: string              # e.g. "https://cdnjs.cloudflare.com/..."
+      purpose: string             # e.g. "charting"
+
+  storage: string                 # [OPTIONAL] Data persistence approach
+                                  # Options: "none", "in-memory", "localStorage",
+                                  #          "sessionStorage", "indexedDB",
+                                  #          "api", "file", "custom"
+                                  # Note: localStorage is unavailable in claude-artifact
+
+  data_model:                     # [OPTIONAL] Key data structures
+    - name: string                # e.g. "RequestForm"
+      fields:                     # List of field names and types
+        field_name: type          # e.g. "title: string", "priority: enum"
+      notes: string               # Any special handling
+
+  ai_platform: string             # [OPTIONAL] AI used to build this
+                                  # e.g. "Claude Sonnet 4.6", "GPT-4o", "Gemini 1.5"
+
+  ai_prompt: |                    # [REQUIRED] The exact build instruction for the AI
+    This is the most important field.
+    Write the complete prompt an AI needs to reconstruct this app
+    from scratch — including all components, interactions,
+    theming rules, and output requirements.
+    Be precise. Treat this as source code, not prose.
+    Use Markdown formatting inside this block if helpful.
+
+  environment_notes: |            # [OPTIONAL] Platform-specific gotchas
+    e.g. "No localStorage in Claude artifacts.
+    Use React useState for all ephemeral state."
+
+# ------------------------------------------------------------
+# BLOCK 4: design
+# Visual and interaction specification.
+# Encode precisely enough that any AI produces the same UI.
+# ------------------------------------------------------------
+design:
+
+  aesthetic: string               # [REQUIRED] One-line design direction
+                                  # e.g. "Modern product UI — flat, minimal,
+                                  # native to Claude.ai interface aesthetic"
+
+  theme: string                   # [OPTIONAL] "light", "dark", "system", "both"
+
+  tokens:                         # [OPTIONAL] Core design tokens
+    colors:
+      primary: string             # e.g. "#1a1a18" or CSS var
+      secondary: string
+      accent: string
+      background: string
+      surface: string
+      border: string
+      text_primary: string
+      text_secondary: string
+      text_muted: string
+      note: string                # e.g. "Use CSS variables for dark mode support"
+
+    typography:
+      font_family: string         # e.g. "var(--font-sans)" or "system-ui"
+      font_size_base: string      # e.g. "14px"
+      font_weight_normal: number  # e.g. 400
+      font_weight_bold: number    # e.g. 500
+      line_height: string         # e.g. "1.6"
+
+    spacing:
+      base_unit: string           # e.g. "8px"
+      padding_sm: string
+      padding_md: string
+      padding_lg: string
+      gap_sm: string
+      gap_md: string
+
+    borders:
+      radius_sm: string           # e.g. "6px"
+      radius_md: string           # e.g. "8px"
+      radius_lg: string           # e.g. "12px"
+      radius_pill: string         # e.g. "99px"
+      width: string               # e.g. "0.5px"
+      color: string               # e.g. "var(--color-border-secondary)"
+
+  components:                     # [OPTIONAL] Reusable UI components
+    - name: string                # e.g. "Chip"
+      description: string         # What it looks like and does
+      states:                     # Visual states
+        - default: string
+        - active: string
+        - hover: string
+        - disabled: string
+      behavior: string            # Interaction description
+
+    - name: string                # Add as many components as needed
+      description: string
+
+  interactions:                   # [OPTIONAL] Key interaction patterns
+    - trigger: string             # e.g. "click chip"
+      action: string              # e.g. "toggle active state"
+      feedback: string            # e.g. "border darkens, background fills"
+
+  responsive: boolean             # [OPTIONAL] true/false — mobile-friendly required?
+  accessibility: string           # [OPTIONAL] e.g. "WCAG AA minimum"
+
+# ------------------------------------------------------------
+# BLOCK 5: verify
+# Acceptance criteria. How to know the build is correct.
+# ------------------------------------------------------------
+verify:
+
+  success_criteria: |             # [REQUIRED] Plain language pass conditions
+    List each criterion on its own line.
+    An AI reading this should be able to self-check against it.
+
+  must_include:                   # [REQUIRED] Hard requirements — always present
+    - string
+
+  must_not_include:               # [REQUIRED] Hard exclusions — never present
+    - string
+
+  edge_cases:                     # [OPTIONAL] Ambiguous situations and how to handle them
+    - situation: string
+      handling: string
+
+  kpis:                           # [OPTIONAL] Measurable quality indicators
+    - metric: string              # e.g. "Tab switch latency"
+      target: string              # e.g. "< 50ms"
+
+  review:
+    human_required: boolean       # [REQUIRED] true/false
+    method: string                # [OPTIONAL] e.g. "manual spot-check", "automated test"
+    reviewer: string              # [OPTIONAL] Name or role
+
+# ------------------------------------------------------------
+# BLOCK 6: changelog
+# Version history. Every change to the .app spec is logged.
+# This is what makes .app files version-controllable.
+# ------------------------------------------------------------
+changelog:
+
+  - version: string               # [REQUIRED] Semantic version matching meta.version
+    date: date                    # [REQUIRED] ISO 8601: YYYY-MM-DD
+    author: string                # [OPTIONAL]
+    ai_platform: string           # [OPTIONAL] AI that produced this version
+    summary: string               # [REQUIRED] One-line description of changes
+    notes: |                      # [OPTIONAL] Longer notes, rationale, diff summary
+      Multiline Markdown.
+
+  # Add an entry for every version — oldest to newest, or newest first.
+  # Convention: newest first is preferred (same as CHANGELOG.md standard).
+
+# ============================================================
+# END OF SCHEMA SPEC
+# ============================================================
+# To use this schema:
+#   1. Copy this file
+#   2. Replace all type annotations (string, boolean, date, etc.)
+#      with your actual values
+#   3. Remove unused optional fields
+#   4. Save as <app-name>.app
+#   5. Pass to any AI with: "Build the app described in this .app file"
+#
+# Schema version: 1.0.0
+# Maintained by: Maker Bot AI
+# ============================================================
